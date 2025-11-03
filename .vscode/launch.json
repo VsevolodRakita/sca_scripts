@@ -12,6 +12,7 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "args": ["bs", "-i", "C:\\coding projects\\sca_scripts\\tests\\1.xlsx"]
+            //"args": ["-v"]
         }
     ]
 }

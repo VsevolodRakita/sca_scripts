@@ -30,7 +30,7 @@ def get_version() -> str:
     try:
         with open(pyproject_path, "rb") as f:
             data = tomllib.load(f)
-        return data["tool"]["poetry"]["version"]
+        return data["project"]["version"]
     except Exception:
         return "unknown"
 

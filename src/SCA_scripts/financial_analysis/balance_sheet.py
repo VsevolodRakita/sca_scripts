@@ -86,7 +86,7 @@ def process(arr):
 
 def process_one(years,arr,i,j):
     """
-    Processes one part of the balanced  sheet (Current Assets, etc.).
+    Processes one part of the balanced sheet (Current Assets, etc.).
 
     :param years: A list of strings representing the years in the balance sheet.
     :param arr: Clean array from a balance sheet.
@@ -109,17 +109,44 @@ def process_one(years,arr,i,j):
         out+=handle(arr, i, j, years, name)
     return out
 
-def handle(row, years, name):
-    pass
-    #out = f'בשנת {years[1]} ה{name} הסתכמו לסך של כ- {round(row[1])} אלפי ש"ח. '
-    #for i in range(2,len(row)):
-    #    if round(row[i])<round(row[i-1]):
-    #        out+= f'בשנת {years[i]} קטנו ה{name} לסך של כ-{round(row[i])} אלפי ש"ח. '
-    #    else:
+def handle(arr, i, j, years, name):
+    '''
+    A helper function for process_one. Creats the output string in case the number of years is different than 3 and the part is not
+    the capital.
 
-    #return out
+    :param arr: Clean array from a balance sheet.
+    :param i: The first index of the part in arr.
+    :param j: The index right after the end of the part.
+    :param years: A list of strings representing the years in the balance sheet.
+    :return: String sumerizing the part.
+    '''
+    updown = []
+    cause = ""
+    temp =[arr[k] for k in range(i+1,j)]
+    while temp[-1][0].startswith('סה"כ'):
+        temp.pop(-1)
+    out = f'בשנת {years[1]} ה{name} של החברה הסתכמו לסך של כ-{LRM} {round(arr[j-1][1])}{LRM} אלפי ש"ח.{LRM} '
+    for k in range(2,len(years)):
+        if round(arr[j-1][k])> round(arr[j-1][k-1]):
+            updown = ["גדלו", "הגידול", "גידול"]
+            cause=max(temp, key= lambda row: row[k]-row[k-1])[0]  
+        else:
+            updown = ["קטנו", "הקיטון", "קיטון"]
+            cause = max(temp, key= lambda row: row[k-1]-row[k])[0]
+        out+= f'בשנת {years[k]} ה{name} של החברה {updown[0]} לסך של כ-{LRM} {round(arr[j-1][k])}{LRM} אלפי ש"ח.{LRM} {updown[1]} נרשם עקב {updown[2]} בסעיף {cause}.{LRM} '
+    out+='\n'
+    return out
 
 def handle_three_years(arr, i, j, years, name):
+    '''
+    A helper function for process_one. Creats the output string in case the number of years is  3.
+
+    :param arr: Clean array from a balance sheet.
+    :param i: The first index of the part in arr.
+    :param j: The index right after the end of the part.
+    :param years: A list of strings representing the years in the balance sheet.
+    :return: String sumerizing the part.
+    '''
     first = []
     cause_first = ""
     second = []
@@ -128,20 +155,28 @@ def handle_three_years(arr, i, j, years, name):
     while temp[-1][0].startswith('סה"כ'):
         temp.pop(-1)
     if round(arr[j-1][2])> round(arr[j-1][1]):
-        first = ["גדלו", "הגידול"]
+        first = ["גדלו", "הגידול", "גידול"]
         cause_first = max(temp, key= lambda row: row[2]-row[1])[0]       
     else:
-        first = ["קטנו", "הקיטון"]
+        first = ["קטנו", "הקיטון", "קיטון"]
         cause_first = max(temp, key= lambda row: row[1]-row[2])[0]
     if round(arr[j-1][3])> round(arr[j-1][2]):
-        second = ["גדלו", "הגידול"]
+        second = ["גדלו", "הגידול", "גידול"]
         cause_second = max(temp, key= lambda row: row[3]-row[2])[0]    
     else:
-        second = ["קטנו", "הקיטון"]
+        second = ["קטנו", "הקיטון", "קיטון"]
         cause_second = max(temp, key= lambda row: row[2]-row[3])[0]
-    return f'בשנת {years[2]} ה{name} של החברה {first[0]} לסך של כ-{LRM} {round(arr[j-1][2])}{LRM} אלפי ש"ח בהשוואה לסך של כ-{LRM} {round(arr[j-1][1])}{LRM} ש"ח בשנת{LRM} {LRM}{years[1]}{LRM}.{LRM} {first[1]} התרחש בעיקר עקב {first[1]} בסעיף {cause_first}.{LRM} בשנת {years[3]} ה{name} של החברה {second[0]} לסך של כ-{LRM} {round(arr[j-1][3])}{LRM} אלפי ש"ח.{LRM} {second[1]} התרחש בעיקר עקב {second[1]} בסעיף {cause_second}.{LRM}\n'
+    return f'בשנת {years[2]} ה{name} של החברה {first[0]} לסך של כ-{LRM} {round(arr[j-1][2])}{LRM} אלפי ש"ח בהשוואה לסך של כ-{LRM} {round(arr[j-1][1])}{LRM} ש"ח בשנת{LRM} {LRM}{years[1]}{LRM}.{LRM} {first[2]} התרחש בעיקר עקב {first[1]} בסעיף {cause_first}.{LRM} בשנת {years[3]} ה{name} של החברה {second[0]} לסך של כ-{LRM} {round(arr[j-1][3])}{LRM} אלפי ש"ח.{LRM} {second[1]} התרחש בעיקר עקב {second[2]} בסעיף {cause_second}.{LRM}\n'
 
 def handle_capital(row, years):
+    '''
+    A helper function for process_one. Creats the output string in case the part is the capital.
+
+    :param row: The row from the excel file describing the capital.
+    :param years: A list of strings representing the years in the balance sheet.
+    :return: String sumerizing the capital.
+    '''
+    
     i=1
     out=""
     while i< len(row):
