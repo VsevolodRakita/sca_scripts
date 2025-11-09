@@ -98,7 +98,18 @@ def process_one(years,arr,i,j):
         return handle_capital(arr[i+1], years)
     name = arr[j-1][0]
     name = name[5:] #delets the סה"כ
-    out = "ה"+name+" של החברה מורכבים מ"
+    composed = "מורכבים"
+    if name == "נכסים שוטפים":
+        name = "הנכסים השוטפים"
+    if name == "נכסים לא שוטפים":
+        name = "הנכסים הלא שוטפים"
+    if name == "התחייבויות שוטפות":
+        name = "ההתחייבויות השוטפות"
+        composed = "מורכבות"
+    if name == "התחייבויות לא שוטפות":
+        name = "ההתחייבויות הלא שוטפות"
+        composed = "מורכבות"
+    out = name + "של החברה " + composed +" מ"
     for k in range(i+1,j-1):
         out+=arr[k][0]+f",{LRM} "
     out = out[:-3]+f".{LRM}"
