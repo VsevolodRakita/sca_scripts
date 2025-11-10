@@ -14,15 +14,62 @@ import argparse
 import sys
 import logging
 from pathlib import Path
-import tomllib  # For Python 3.11+. Use `import tomli as tomllib` if older.
+import json
+from urllib.request import urlopen
+import webbrowser
+import platform
+import tomllib  
 
 # Import your script modules
 import SCA_scripts.financial_analysis.balance_sheet as balance_sheet
 import SCA_scripts.financial_analysis.p_and_l as pnl
 
+
+GITHUB_REPO = "VsevolodRakita/sca_scripts"
+GITHUB_LATEST_URL = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
 # ---------------------------
 # Utility Functions
 # ---------------------------
+
+def parse_version(v: str) -> tuple[int, ...]:
+    """Very small semantic-version parser: '1.2.3' -> (1, 2, 3)."""
+    return tuple(int(part) for part in v.strip().lstrip("v").split("."))
+
+
+def get_latest_release_info():
+    """Query GitHub for the latest release info."""
+    logging.debug("Checking GitHub for latest release: %s", GITHUB_LATEST_URL)
+    with urlopen(GITHUB_LATEST_URL) as resp:
+        data = json.load(resp)
+
+    tag = data["tag_name"]          # e.g. "v0.2.0"
+    version = tag.lstrip("v")       # "0.2.0"
+    html_url = data["html_url"]     # release page
+    assets = data.get("assets", []) # list of assets (installers, binaries, etc.)
+
+    return version, html_url, assets
+
+
+def run_update(_args):
+    current = get_version()
+    logging.info("Current version: %s", current)
+
+    try:
+        latest, release_url, _assets = get_latest_release_info()
+    except Exception as e:
+        logging.error("Failed to check for updates: %s", e)
+        print("Could not check for updates. Please try again later.")
+        return
+
+    logging.info("Latest version on GitHub: %s", latest)
+
+    if parse_version(latest) <= parse_version(current):
+        print(f"You are up to date (version {current}).")
+        return
+
+    print(f"A newer version is available: {latest} (you have {current}).")
+    print("Opening the GitHub release page so you can download the installer...")
+    webbrowser.open(release_url)
 
 def get_version() -> str:
     """Read project version from pyproject.toml (Poetry)."""
@@ -105,6 +152,14 @@ def main():
     parser_pnl.add_argument("--tab_name", "-t", help="Optional name of the tab where the balance sheet is located. If not provided, will assume active tab.")
     parser_pnl.add_argument("--output", "-o", help="Optional path for analysis output.")
     parser_pnl.set_defaults(func=pnl.run)
+
+    # ---- NEW: update command ----
+    parser_update = subparsers.add_parser(
+        "update",
+        help="Check GitHub for a newer version and open the installer page.",
+    )
+    parser_update.set_defaults(func=run_update)
+
     # ---- Parse Arguments ----
     args = parser.parse_args()
 
